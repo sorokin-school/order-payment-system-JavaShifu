@@ -1,0 +1,14 @@
+-------------------------------------------------------
+Допустимые переходы:
+-------------------------------------------------------
+
+NEW
+→ AUTHORIZED
+→ AUTHORIZATION_FAILED (terminal)
+
+AUTHORIZED
+→ REPRICE
+
+REPRICE
+→ PRICE_CHANGED_FAILED (terminal)
+→ SUCCEED_PAID (terminal)

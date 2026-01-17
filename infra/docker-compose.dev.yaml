@@ -22,18 +22,23 @@ services:
   order-orchestrator:
     build:
       context: ..
-      dockerfile: Dockerfile
+      dockerfile: order-orchestrator/Dockerfile
     environment:
       SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/orders
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pass
       PAYMENT_STUB_URL: http://payment-stub:8081
+
+      # Включаем JDWP
+      JAVA_TOOL_OPTIONS: >
+        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+
     ports:
       - "8080:8080"
+      - "5005:5005"   # debug-порт
     depends_on:
       - postgres
       - payment-stub
     mem_limit: 512m
     cpus: "2"
-
