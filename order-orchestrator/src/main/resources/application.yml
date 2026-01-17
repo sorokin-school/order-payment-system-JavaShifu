@@ -1,3 +1,4 @@
+# настройки приложения
 spring:
   application:
     name: order-orchestrator
@@ -22,3 +23,17 @@ spring:
 springdoc:
   swagger-ui:
     path: /swagger-ui
+
+# настройки хостов
+hosts:
+  base-url:
+    payment-stub: http://payment-stub:8081/payment
+    warehouse-stub: http://payment-stub:8081/warehouse
+
+# настройки поллера
+payment-task:
+  poller:
+    poll-interval: ${TASK_EXEC_POLL_INTERVAL:3s}
+    batch-size: ${TASK_EXEC_BATCH_SIZE:5}
+    retry-delay: ${TASK_EXEC_RETRY_DELAY:30s}
+    max-attempts: ${TASK_EXEC_MAX_ATTEMPTS:10}

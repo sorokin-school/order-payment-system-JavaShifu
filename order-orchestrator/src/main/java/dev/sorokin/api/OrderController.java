@@ -1,7 +1,10 @@
 package dev.sorokin.api;
 
-import dev.sorokin.domain.OrderEntity;
-import dev.sorokin.domain.OrderService;
+import dev.sorokin.api.dto.OrderCreateRequest;
+import dev.sorokin.api.dto.OrderCreateResponse;
+import dev.sorokin.api.dto.converter.OrderDtoConverter;
+import dev.sorokin.domain.entity.Order;
+import dev.sorokin.domain.service.OrderService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,35 +20,31 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderDtoConverter orderDtoConverter;
 
     @PostMapping
-    public ResponseEntity<OrderDto> createOrder(
-            @RequestBody OrderCreateRequestDto orderCreateRequestDto
-    ) {
-        log.info("Received request to create order: request={}", orderCreateRequestDto);
-        var created = orderService.createOrder(orderCreateRequestDto);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<OrderCreateResponse> createOrder(@RequestBody OrderCreateRequest orderCreateRequest) {
+        log.info("Received request to create order: request={}", orderCreateRequest);
+
+        var created = orderService.createOrder(orderCreateRequest);
+
         log.info("Created order: created={}", created);
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(mapEntityToDto(created));
+                .body(orderDtoConverter.convertToDto(created));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDto> getOrder(
-            @PathVariable UUID id
-    ) {
-        log.info("Getting order with id {}", id);
+    public ResponseEntity<OrderCreateResponse> getOrder(@PathVariable UUID id) {
+        log.info("Getting order with orderId {}", id);
+
         var foundOrder = orderService.findOrder(id);
+
         return foundOrder
-                .map(this::mapEntityToDto)
+                .map(orderDtoConverter::convertToDto)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    private OrderDto mapEntityToDto(OrderEntity order) {
-        return OrderDto.builder()
-                .id(order.getId())
-                .address(order.getAddress())
-                .build();
     }
 }
