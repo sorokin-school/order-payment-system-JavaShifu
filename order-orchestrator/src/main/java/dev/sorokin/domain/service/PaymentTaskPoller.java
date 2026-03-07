@@ -10,9 +10,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.List;
 
 @Slf4j
@@ -34,25 +31,23 @@ public class PaymentTaskPoller {
         );
     }
 
-
     @Scheduled(fixedDelayString = "${payment-task.poller.poll-interval}")
     public void poll() {
         var tasks = pickTasksForProcessing();
 
         if (tasks.isEmpty()) {
             return;
-        } else {
-            var tasksIds = tasks.stream()
-                    .map(PaymentTask::getId)
-                    .toList();
-
-            log.info("Successfully picked tasks: count = {}, ids = {}", tasksIds.size(), tasksIds);
         }
+
+        var tasksIds = tasks.stream()
+                .map(PaymentTask::getId)
+                .toList();
+
+        log.info("Successfully picked tasks: count = {}, ids = {}", tasksIds.size(), tasksIds);
 
         for (var task : tasks) {
             if (task.getAttempts() < paymentTaskProperties.getMaxAttempts()) {
                 task.setStatus(PaymentTaskStatus.IN_PROGRESS);
-                task.setAttempts(task.getAttempts() == null ? 1 : task.getAttempts() + 1);
                 task.setNextAttemptAt(OffsetDateTime.now().plus(paymentTaskProperties.getRetryDelay()));
                 paymentTaskRepository.save(task);
                 paymentTaskDispatcher.dispatch(task);

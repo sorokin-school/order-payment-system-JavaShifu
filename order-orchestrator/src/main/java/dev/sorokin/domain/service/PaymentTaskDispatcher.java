@@ -4,15 +4,12 @@ import dev.sorokin.config.PaymentTaskProperties;
 import dev.sorokin.domain.entity.PaymentTask;
 import dev.sorokin.domain.entity.PaymentTaskStatus;
 import dev.sorokin.domain.repository.PaymentTaskRepository;
-import dev.sorokin.utils.exception.ExceptionUtil;
+import dev.sorokin.utils.ExceptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 

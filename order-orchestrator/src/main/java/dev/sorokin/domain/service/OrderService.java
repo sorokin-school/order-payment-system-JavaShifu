@@ -8,6 +8,7 @@ import dev.sorokin.domain.repository.PaymentTaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -20,6 +21,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final PaymentTaskRepository paymentTaskRepository;
 
+    @Transactional
     public Order createOrder(OrderCreateRequest requestDto) {
         var orderEntity = Order.builder()
                 .address(requestDto.address())
@@ -28,7 +30,7 @@ public class OrderService {
         var savedOrderEntity = orderRepository.save(orderEntity);
 
         var paymentTask = PaymentTask.builder()
-                .orderId(savedOrderEntity)
+                .order(savedOrderEntity)
                 .build();
 
         paymentTaskRepository.save(paymentTask);

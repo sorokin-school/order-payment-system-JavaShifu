@@ -3,8 +3,8 @@ package dev.sorokin.api;
 import dev.sorokin.api.dto.OrderCreateRequest;
 import dev.sorokin.api.dto.OrderCreateResponse;
 import dev.sorokin.api.dto.converter.OrderDtoConverter;
-import dev.sorokin.domain.entity.Order;
 import dev.sorokin.domain.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,7 +24,7 @@ public class OrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<OrderCreateResponse> createOrder(@RequestBody OrderCreateRequest orderCreateRequest) {
+    public ResponseEntity<OrderCreateResponse> createOrder(@RequestBody @Valid OrderCreateRequest orderCreateRequest) {
         log.info("Received request to create order: request={}", orderCreateRequest);
 
         var created = orderService.createOrder(orderCreateRequest);

@@ -1,4 +1,4 @@
-package dev.sorokin.utils.exception;
+package dev.sorokin.utils;
 
 import org.springframework.stereotype.Component;
 
@@ -13,9 +13,9 @@ public final class ExceptionUtil {
     }
 
     public static String getStackTraceWithMessage(Throwable exception) {
-        return exception.getClass() + " : " + exception.getMessage() + "\n" +
+        return exception.getClass() + " : " + exception.getMessage() + System.lineSeparator() +
                 Arrays.stream(exception.getStackTrace())
                         .map(Objects::toString)
-                        .collect(Collectors.joining("\n"));
+                        .collect(Collectors.joining(System.lineSeparator()));
     }
 }

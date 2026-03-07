@@ -24,6 +24,11 @@ springdoc:
   swagger-ui:
     path: /swagger-ui
 
+# настройки HTTP-клиента
+http-client:
+  connect-timeout: 5s
+  read-timeout: 30s
+
 # настройки хостов
 hosts:
   base-url:
