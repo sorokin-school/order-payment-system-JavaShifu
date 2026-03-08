@@ -1,8 +1,10 @@
 package dev.sorokin.domain.service;
 
 import dev.sorokin.config.PaymentTaskProperties;
+import dev.sorokin.domain.entity.PaymentStatus;
 import dev.sorokin.domain.entity.PaymentTask;
 import dev.sorokin.domain.entity.PaymentTaskStatus;
+import dev.sorokin.domain.repository.OrderRepository;
 import dev.sorokin.domain.repository.PaymentTaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PaymentTaskPoller {
 
+    private final OrderRepository orderRepository;
     private final PaymentTaskDispatcher paymentTaskDispatcher;
     private final PaymentTaskProperties paymentTaskProperties;
     private final PaymentTaskRepository paymentTaskRepository;
@@ -53,6 +56,11 @@ public class PaymentTaskPoller {
                 paymentTaskDispatcher.dispatch(task);
             } else {
                 log.error("Maximum number of retries reached: taskId = {}", task.getId());
+
+                var order = task.getOrder();
+                order.setPaymentStatus(PaymentStatus.TECHNICAL_FAILED);
+                order.setFailureReason("Технический сбой обработки платежа");
+                orderRepository.save(order);
 
                 task.setStatus(PaymentTaskStatus.FAILED_NON_RETRYABLE);
                 paymentTaskRepository.save(task);

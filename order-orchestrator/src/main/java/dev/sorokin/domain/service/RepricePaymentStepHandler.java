@@ -7,13 +7,13 @@ import dev.sorokin.domain.entity.PaymentStatus;
 import dev.sorokin.domain.entity.PaymentTask;
 import dev.sorokin.domain.entity.PaymentTaskStatus;
 import dev.sorokin.domain.entity.PaymentTaskStep;
+import dev.sorokin.domain.exception.WarehousePricingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class RepricePaymentStepHandler implements PaymentStepHandler {
-
     private final WarehouseStubClient warehouseStubClient;
 
     @Override
@@ -24,18 +24,24 @@ public class RepricePaymentStepHandler implements PaymentStepHandler {
     @Override
     public void handle(Order order, PaymentTask paymentTask) {
         var repriceRequest = new CalculatePricingRequestDto(order.getId());
-        var calculatePricingResponse = warehouseStubClient.repricePayment(repriceRequest);
-        var finalAmount = calculatePricingResponse.finalAmount();
-        order.setFinalAmount(finalAmount);
 
-        if (finalAmount.compareTo(order.getAuthorizedAmount()) > 0) {
-            order.setPaymentStatus(PaymentStatus.PRICE_CHANGED_FAILED);
-            order.setFailureReason("Цена товара выросла");
-            paymentTask.setStatus(PaymentTaskStatus.FAILED_NON_RETRYABLE);
+        try {
+            var calculatePricingResponse = warehouseStubClient.repricePayment(repriceRequest);
+            var finalAmount = calculatePricingResponse.finalAmount();
+            order.setFinalAmount(finalAmount);
 
-            return;
+            if (finalAmount.compareTo(order.getAuthorizedAmount()) > 0) {
+                order.setPaymentStatus(PaymentStatus.PRICE_CHANGED_FAILED);
+                order.setFailureReason("Цена товара выросла");
+                paymentTask.setStatus(PaymentTaskStatus.FAILED_NON_RETRYABLE);
+
+                return;
+            }
+
+            paymentTask.setStep(PaymentTaskStep.CAPTURE);
+        } catch (WarehousePricingException ex) {
+            order.setFailureReason("Сбой проверки цены на складе");
+            paymentTask.setStatus(PaymentTaskStatus.FAILED_RETRYABLE);
         }
-
-        paymentTask.setStep(PaymentTaskStep.CAPTURE);
     }
 }

@@ -19,7 +19,7 @@ public class WarehouseStubClient {
         this.restTemplate = restTemplate;
     }
 
-    public CalculatePricingResponseDto repricePayment(CalculatePricingRequestDto request) {
+    public CalculatePricingResponseDto repricePayment(CalculatePricingRequestDto request) throws WarehousePricingException {
         String url = UriComponentsBuilder
                 .fromUriString(warehouseStubBaseUrl)
                 .pathSegment("calculate-price")
@@ -28,7 +28,10 @@ public class WarehouseStubClient {
                 .postForEntity(url, request, CalculatePricingResponseDto.class);
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new WarehousePricingException("Calculate price failed: HTTP " + response.getStatusCode());
+            throw new WarehousePricingException(
+                    "Calculate price failed: HTTP " + response.getStatusCode(),
+                    response.getStatusCode().value()
+            );
         }
 
         CalculatePricingResponseDto body = response.getBody();
