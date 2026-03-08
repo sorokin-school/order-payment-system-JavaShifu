@@ -7,13 +7,13 @@ import dev.sorokin.domain.entity.PaymentStatus;
 import dev.sorokin.domain.entity.PaymentTask;
 import dev.sorokin.domain.entity.PaymentTaskStatus;
 import dev.sorokin.domain.entity.PaymentTaskStep;
+import dev.sorokin.domain.exception.PaymentCaptureException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class CapturePaymentStepHandler implements PaymentStepHandler {
-
     private final PaymentStubClient paymentStubClient;
 
     @Override
@@ -24,9 +24,15 @@ public class CapturePaymentStepHandler implements PaymentStepHandler {
     @Override
     public void handle(Order order, PaymentTask paymentTask) {
         var captureRequest = new CapturePaymentRequestDto(order.getAuthorizedAmount(), order.getCustomerId());
-        var capturePaymentResponse = paymentStubClient.capturePayment(captureRequest);
-        order.setCapturedAmount(capturePaymentResponse.capturedAmount());
-        order.setPaymentStatus(PaymentStatus.SUCCEED_PAID);
-        paymentTask.setStatus(PaymentTaskStatus.SUCCEEDED);
+
+        try {
+            var capturePaymentResponse = paymentStubClient.capturePayment(captureRequest);
+            order.setCapturedAmount(capturePaymentResponse.capturedAmount());
+            order.setPaymentStatus(PaymentStatus.SUCCEED_PAID);
+            paymentTask.setStatus(PaymentTaskStatus.SUCCEEDED);
+        } catch (PaymentCaptureException ex) {
+            order.setFailureReason("Сбой проведения платежа");
+            paymentTask.setStatus(PaymentTaskStatus.FAILED_RETRYABLE);
+        }
     }
 }

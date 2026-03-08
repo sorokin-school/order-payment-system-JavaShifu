@@ -23,7 +23,7 @@ public class PaymentStubClient {
         this.restTemplate = restTemplate;
     }
 
-    public AuthorizePaymentResponseDto authorizePayment(AuthorizePaymentRequestDto request) {
+    public AuthorizePaymentResponseDto authorizePayment(AuthorizePaymentRequestDto request) throws PaymentAuthorizationException {
         String url = UriComponentsBuilder
                 .fromUriString(paymentStubBaseUrl)
                 .pathSegment("authorize")
@@ -32,7 +32,10 @@ public class PaymentStubClient {
                 .postForEntity(url, request, AuthorizePaymentResponseDto.class);
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new PaymentAuthorizationException("Authorize failed: HTTP " + response.getStatusCode());
+            throw new PaymentAuthorizationException(
+                    "Authorize failed: HTTP " + response.getStatusCode(),
+                    response.getStatusCode().value()
+            );
         }
 
         AuthorizePaymentResponseDto body = response.getBody();
@@ -44,7 +47,7 @@ public class PaymentStubClient {
         return body;
     }
 
-    public CapturePaymentResponseDto capturePayment(CapturePaymentRequestDto request) {
+    public CapturePaymentResponseDto capturePayment(CapturePaymentRequestDto request) throws PaymentCaptureException {
         String url = UriComponentsBuilder
                 .fromUriString(paymentStubBaseUrl)
                 .pathSegment("capture")
@@ -53,7 +56,10 @@ public class PaymentStubClient {
                 .postForEntity(url, request, CapturePaymentResponseDto.class);
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new PaymentCaptureException("Capture failed: HTTP " + response.getStatusCode());
+            throw new PaymentCaptureException(
+                    "Capture failed: HTTP " + response.getStatusCode(),
+                    response.getStatusCode().value()
+            );
         }
 
         CapturePaymentResponseDto body = response.getBody();

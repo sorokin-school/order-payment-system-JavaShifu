@@ -8,13 +8,13 @@ import dev.sorokin.domain.entity.PaymentStatus;
 import dev.sorokin.domain.entity.PaymentTask;
 import dev.sorokin.domain.entity.PaymentTaskStatus;
 import dev.sorokin.domain.entity.PaymentTaskStep;
+import dev.sorokin.domain.exception.PaymentAuthorizationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class AuthPaymentStepHandler implements PaymentStepHandler {
-
     private final PaymentStubClient paymentStubClient;
 
     @Override
@@ -25,20 +25,26 @@ public class AuthPaymentStepHandler implements PaymentStepHandler {
     @Override
     public void handle(Order order, PaymentTask paymentTask) {
         var authRequest = new AuthorizePaymentRequestDto(order.getCustomerId(), order.getClientEstimate());
-        var authorizePaymentResponse = paymentStubClient.authorizePayment(authRequest);
-        var authStatus = authorizePaymentResponse.status();
-        var authorizedAmount = authorizePaymentResponse.authorizedAmount();
 
-        if (!AuthorizationStatus.AUTHORIZED.equals(authStatus)) {
-            order.setPaymentStatus(PaymentStatus.AUTHORIZATION_FAILED);
-            order.setFailureReason("Отказ банка");
+        try {
+            var authorizePaymentResponse = paymentStubClient.authorizePayment(authRequest);
+            var authStatus = authorizePaymentResponse.status();
+            var authorizedAmount = authorizePaymentResponse.authorizedAmount();
+
+            if (!AuthorizationStatus.AUTHORIZED.equals(authStatus)) {
+                order.setPaymentStatus(PaymentStatus.AUTHORIZATION_FAILED);
+                order.setFailureReason("Отказ банка");
+                paymentTask.setStatus(PaymentTaskStatus.FAILED_RETRYABLE);
+
+                return;
+            }
+
+            order.setAuthorizedAmount(authorizedAmount);
+            order.setPaymentStatus(PaymentStatus.AUTHORIZED);
+            paymentTask.setStep(PaymentTaskStep.REPRICE);
+        } catch (PaymentAuthorizationException ex) {
+            order.setFailureReason("Сбой авторизации платежа");
             paymentTask.setStatus(PaymentTaskStatus.FAILED_RETRYABLE);
-
-            return;
         }
-
-        order.setAuthorizedAmount(authorizedAmount);
-        order.setPaymentStatus(PaymentStatus.AUTHORIZED);
-        paymentTask.setStep(PaymentTaskStep.REPRICE);
     }
 }

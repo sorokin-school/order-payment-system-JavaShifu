@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS payment_tasks
     next_attempt_at TIMESTAMPTZ,
     created_at      TIMESTAMPTZ,
     updated_at      TIMESTAMPTZ,
-    locked_until    TIMESTAMPTZ,
 
     CONSTRAINT fk_order_id FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
     CONSTRAINT ck_payment_tasks_status CHECK (status IN ('NEW', 'IN_PROGRESS', 'SUCCEEDED', 'FAILED_RETRYABLE',
