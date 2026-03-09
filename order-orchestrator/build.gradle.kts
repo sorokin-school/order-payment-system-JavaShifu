@@ -25,6 +25,10 @@ dependencies {
     implementation("org.liquibase:liquibase-core")
     runtimeOnly("org.postgresql:postgresql")
 
+    // mapstruct
+    implementation("org.mapstruct:mapstruct:1.6.2")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.2")
+
     //  tests
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
